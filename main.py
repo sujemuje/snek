@@ -1,10 +1,8 @@
 import sys
-
 import arcade
+import settings as stg
 from snake import Snake
-
-
-SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE = 800, 600, 'snek'
+from map import Map
 
 
 class Game(arcade.Window):
@@ -12,18 +10,21 @@ class Game(arcade.Window):
         super().__init__(w, h, title)
 
         self.snake: Snake() = None
+        self.map: Map() = None
         self.key_inputs = []
 
         arcade.set_background_color(arcade.color.AMAZON)
 
     def setup(self):
         self.snake = Snake()
+        self.map = Map()
 
     def on_update(self, dt: float):
-        self.clear()
         self.snake.on_update(dt)
 
     def on_draw(self):
+        self.clear()
+        map.draw()
         self.snake.on_draw()
 
     def on_key_press(self, key, keymod):
@@ -45,7 +46,7 @@ class Game(arcade.Window):
 
 def main():
     """ Main function """
-    game = Game(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
+    game = Game(stg.SCREEN_WIDTH, stg.SCREEN_HEIGHT, stg.SCREEN_TITLE)
     game.setup()
     arcade.run()
 
