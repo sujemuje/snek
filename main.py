@@ -9,22 +9,22 @@ class Game(arcade.Window):
     def __init__(self, w, h, title):
         super().__init__(w, h, title)
 
-        self.snake: Snake() = None
-        self.map: Map() = None
+        self.snake: Snake = None
+        self.map: Map = None
         self.key_inputs = []
 
         arcade.set_background_color(arcade.color.AMAZON)
 
     def setup(self):
-        self.snake = Snake()
         self.map = Map()
+        self.snake = Snake(self.map)
 
     def on_update(self, dt: float):
         self.snake.on_update(dt)
 
     def on_draw(self):
         self.clear()
-        map.draw()
+        self.map.on_draw()
         self.snake.on_draw()
 
     def on_key_press(self, key, keymod):

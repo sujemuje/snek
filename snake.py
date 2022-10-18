@@ -18,40 +18,59 @@ class Segment:
 
 
 class Snake:
-    def __init__(self):
+    def __init__(self, map):
         self.head = Segment()
+        self.head.color = (50, 50, 50)
         self.tail: list[Segment] = [self.head]
         self.vel = BLOCK_SIZE
         self.dir = (self.vel, 0)
+        self.dead = False
+        self.map = map
 
         self.counter = 0
         self.counter_lim = .8
 
     def move(self):
+        """
+        Function responsible for moving snake and checking legibility for movement, and reporting a loss if struck
+        """
+
+        """New snake's position"""
         new_x = self.head.x + self.dir[0]
         new_y = self.head.y + self.dir[1]
-
-        if not 0 <= new_x <= stg.SCREEN_WIDTH:
+        # repositioning if screen transition occurs
+        if not 0 <= new_x <= SCREEN_WIDTH:
             if new_x < 0:
                 new_x += SCREEN_WIDTH + self.vel
             else:
-                new_x -= SCREEN_WIDTH - self.vel
+                new_x -= SCREEN_WIDTH + self.vel
 
-        elif not 0 <= new_y <= stg.SCREEN_HEIGHT:
+        elif not 0 <= new_y <= SCREEN_HEIGHT:
             if new_y < 0:
                 new_y += SCREEN_HEIGHT + self.vel
             else:
-                new_y -= SCREEN_HEIGHT - self.vel
+                new_y -= SCREEN_HEIGHT + self.vel
 
+        """Checking collisions"""
+        # collision with any blocks on the map
+        for obstacle in self.map.obstacles:
+            if new_x == obstacle.x and new_y == obstacle.y:
+                self.dead = True
+                return
+
+        # collision with its own body
         for i in range(1, len(self.tail)):
             if self.tail[i].x == new_x and self.tail[i].y == new_y:
                 if i < len(self.tail) - 1:
-                    break
-        else:
-            for i in range(len(self.tail) - 1, 0, -1):
-                self.tail[i].set_position(self.tail[i - 1].x, self.tail[i - 1].y)
+                    self.dead = True
+                    return
 
-            self.head.set_position(new_x, new_y)
+        """Moving snake"""
+        # tail (backwards)
+        for i in range(len(self.tail) - 1, 0, -1):
+            self.tail[i].set_position(self.tail[i - 1].x, self.tail[i - 1].y)
+        # head
+        self.head.set_position(new_x, new_y)
 
     def on_update(self, dt: float):
         self.counter += dt
@@ -59,6 +78,8 @@ class Snake:
             self.counter -= self.counter_lim
 
             self.move()
+            if self.dead:
+                self.head.color = (150, 0, 0)
 
     def on_draw(self):
         for segment in self.tail:
