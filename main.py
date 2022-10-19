@@ -45,6 +45,7 @@ class Game(arcade.Window):
         self.snake.key_check(self.key_inputs)
 
 
+
 def main():
     """ Main function """
     game = Game(stg.SCREEN_WIDTH, stg.SCREEN_HEIGHT, stg.SCREEN_TITLE)
