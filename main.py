@@ -38,6 +38,7 @@ class Game(arcade.Window):
     def on_key_release(self, key, keymod):
         self.key_inputs.remove(key)
 
+        self.snake.on_key_release(key, keymod)
         self.key_check()
 
     def key_check(self):

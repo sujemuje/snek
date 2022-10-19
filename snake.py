@@ -3,9 +3,9 @@ from settings import *
 
 
 class Segment:
-    def __init__(self):
-        self.x = 0
-        self.y = 0
+    def __init__(self, x=0, y=0):
+        self.x = x
+        self.y = y
         self.a = BLOCK_SIZE - SEGMENT_GAP
         self.color = (0, 0, 0)
 
@@ -24,11 +24,14 @@ class Snake:
         self.tail: list[Segment] = [self.head]
         self.vel = BLOCK_SIZE
         self.dir = (self.vel, 0)
+        self.dir_keys = [arcade.key.W, arcade.key.A, arcade.key.S, arcade.key.D]
         self.dead = False
         self.map = map
 
         self.counter = 0
-        self.counter_lim = .8
+        self.counter_lim = [.8, .2, .1]
+        self.counter_lim_switch = 0
+        self.boost = False
 
     def move(self):
         """
@@ -65,6 +68,11 @@ class Snake:
                     self.dead = True
                     return
 
+        """checking if snake ate an apple"""
+        if new_x == self.map.apple.x and new_y == self.map.apple.y:
+            self.tail.append(Segment(self.tail[-1].x, self.tail[-1].y))
+            self.map.respawn_apple()
+
         """Moving snake"""
         # tail (backwards)
         for i in range(len(self.tail) - 1, 0, -1):
@@ -74,8 +82,8 @@ class Snake:
 
     def on_update(self, dt: float):
         self.counter += dt
-        if self.counter >= self.counter_lim:
-            self.counter -= self.counter_lim
+        if self.counter >= self.counter_lim[self.counter_lim_switch]:
+            self.counter -= self.counter_lim[self.counter_lim_switch]
 
             self.move()
             if self.dead:
@@ -88,14 +96,26 @@ class Snake:
     def on_key_press(self, key, keymod):
         if key == arcade.key.Z:
             self.tail.append(Segment())
+        elif key == arcade.key.LSHIFT:
+            self.boost = True
+            self.counter *= self.counter_lim[self.counter_lim_switch + 1] / self.counter_lim[self.counter_lim_switch]
+        elif key in self.dir_keys:
+            self.counter = self.counter_lim[1 if not self.boost else 2]
+
+    def on_key_release(self, key, keymod):
+        if key == arcade.key.LSHIFT:
+            self.boost = False
+            self.counter *= self.counter_lim[self.counter_lim_switch - 1] / self.counter_lim[self.counter_lim_switch]
 
     def key_check(self, key_inputs):
-        for key in key_inputs[::-1]:
-            if key == arcade.key.S or key == arcade.key.W or key == arcade.key.A or key == arcade.key.D:
-                if self.counter_lim != .15:
-                    self.counter_lim = .15
-                self.counter = .15
+        self.counter_lim_switch = 0
 
+        if self.boost:
+            self.counter_lim_switch += 1
+        if any(x in key_inputs for x in self.dir_keys):
+            self.counter_lim_switch += 1
+
+        for key in key_inputs[::-1]:
             if key == arcade.key.D:
                 self.dir = (self.vel, 0)
                 break
@@ -108,6 +128,3 @@ class Snake:
             elif key == arcade.key.S:
                 self.dir = (0, -self.vel)
                 break
-        else:
-            if self.counter_lim != .8:
-                self.counter_lim = .8
