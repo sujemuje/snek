@@ -7,31 +7,32 @@ class Segment:
         self.x = x
         self.y = y
         self.a = BLOCK_SIZE - SEGMENT_GAP
-        self.color = (0, 0, 0)
+        self.sprite = arcade.Sprite("snake_segment.png")
 
     def set_position(self, x, y):
         self.x = x
         self.y = y
+        self.sprite.set_position(self.x, self.y)
 
     def on_draw(self):
-        arcade.draw_rectangle_filled(self.x, self.y, self.a, self.a, self.color)
+        self.sprite.draw()
 
 
 class Snake:
-    def __init__(self, map):
-        self.head = Segment()
-        self.head.color = (50, 50, 50)
-        self.tail: list[Segment] = [self.head]
+    def __init__(self, _map, segments=1):
+        self.tail: list[Segment] = [Segment() for _ in range(segments)]
+        self.head = self.tail[0]
         self.vel = BLOCK_SIZE
         self.dir = (self.vel, 0)
         self.dir_keys = [arcade.key.W, arcade.key.A, arcade.key.S, arcade.key.D]
         self.dead = False
-        self.map = map
+        self.map = _map
 
         self.counter = 0
         self.counter_lim = [.8, .2, .1]
         self.counter_lim_switch = 0
         self.boost = False
+        self.i = 0
 
     def move(self):
         """
@@ -70,6 +71,7 @@ class Snake:
 
         """checking if snake ate an apple"""
         if new_x == self.map.apple.x and new_y == self.map.apple.y:
+            self.tail[-1].sprite.scale = 1
             self.tail.append(Segment(self.tail[-1].x, self.tail[-1].y))
             self.map.respawn_apple()
 
@@ -87,7 +89,11 @@ class Snake:
 
             self.move()
             if self.dead:
-                self.head.color = (150, 0, 0)
+                self.head.sprite.color = (150, 0, 0)
+
+        x = self.counter / self.counter_lim[self.counter_lim_switch]
+        self.tail[-1].sprite.scale = 1 - x
+        self.head.sprite.scale = x
 
     def on_draw(self):
         for segment in self.tail:
@@ -117,14 +123,18 @@ class Snake:
 
         for key in key_inputs[::-1]:
             if key == arcade.key.D:
-                self.dir = (self.vel, 0)
-                break
+                if not self.dir[0]:
+                    self.dir = (self.vel, 0)
+                    break
             elif key == arcade.key.A:
-                self.dir = (-self.vel, 0)
-                break
+                if not self.dir[0]:
+                    self.dir = (-self.vel, 0)
+                    break
             elif key == arcade.key.W:
-                self.dir = (0, self.vel)
-                break
+                if not self.dir[1]:
+                    self.dir = (0, self.vel)
+                    break
             elif key == arcade.key.S:
-                self.dir = (0, -self.vel)
-                break
+                if not self.dir[1]:
+                    self.dir = (0, -self.vel)
+                    break

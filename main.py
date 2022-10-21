@@ -17,10 +17,11 @@ class Game(arcade.Window):
 
     def setup(self):
         self.map = Map()
-        self.snake = Snake(self.map)
+        self.snake = Snake(self.map, 3)
 
     def on_update(self, dt: float):
-        self.snake.on_update(dt)
+        if not self.snake.dead:
+            self.snake.on_update(dt)
 
     def on_draw(self):
         self.clear()
@@ -44,6 +45,8 @@ class Game(arcade.Window):
     def key_check(self):
         self.snake.key_check(self.key_inputs)
 
+    def on_expose(self):
+        print("lol")
 
 
 def main():
