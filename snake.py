@@ -18,6 +18,21 @@ class Segment:
         self.sprite.draw()
 
 
+def correct_pos(x, y):
+    """Repositioning if screen transition occurs"""
+    if not 0 <= x <= SCREEN_WIDTH:
+        if x < 0:
+            x += SCREEN_WIDTH + BLOCK_SIZE
+        else:
+            x -= SCREEN_WIDTH + BLOCK_SIZE
+    elif not 0 <= y <= SCREEN_HEIGHT:
+        if y < 0:
+            y += SCREEN_HEIGHT + BLOCK_SIZE
+        else:
+            y -= SCREEN_HEIGHT + BLOCK_SIZE
+    return x, y
+
+
 class Snake:
     def __init__(self, _map, segments=1):
         self.tail: list[Segment] = [Segment() for _ in range(segments)]
@@ -29,7 +44,7 @@ class Snake:
         self.map = _map
 
         self.counter = 0
-        self.counter_lim = [.8, .2, .1]
+        self.counter_lim = [1, .5, .2]
         self.counter_lim_switch = 0
         self.boost = False
         self.i = 0
@@ -40,20 +55,7 @@ class Snake:
         """
 
         """New snake's position"""
-        new_x = self.head.x + self.dir[0]
-        new_y = self.head.y + self.dir[1]
-        # repositioning if screen transition occurs
-        if not 0 <= new_x <= SCREEN_WIDTH:
-            if new_x < 0:
-                new_x += SCREEN_WIDTH + self.vel
-            else:
-                new_x -= SCREEN_WIDTH + self.vel
-
-        elif not 0 <= new_y <= SCREEN_HEIGHT:
-            if new_y < 0:
-                new_y += SCREEN_HEIGHT + self.vel
-            else:
-                new_y -= SCREEN_HEIGHT + self.vel
+        new_x, new_y = correct_pos(self.head.x + self.dir[0], self.head.y + self.dir[1])
 
         """Checking collisions"""
         # collision with any blocks on the map
@@ -63,11 +65,10 @@ class Snake:
                 return
 
         # collision with its own body
-        for i in range(1, len(self.tail)):
+        for i in range(1, len(self.tail) - 1):
             if self.tail[i].x == new_x and self.tail[i].y == new_y:
-                if i < len(self.tail) - 1:
-                    self.dead = True
-                    return
+                self.dead = True
+                return
 
         """checking if snake ate an apple"""
         if new_x == self.map.apple.x and new_y == self.map.apple.y:
@@ -114,27 +115,32 @@ class Snake:
             self.counter *= self.counter_lim[self.counter_lim_switch - 1] / self.counter_lim[self.counter_lim_switch]
 
     def key_check(self, key_inputs):
-        self.counter_lim_switch = 0
+        i = 0
 
         if self.boost:
-            self.counter_lim_switch += 1
+            i += 1
         if any(x in key_inputs for x in self.dir_keys):
-            self.counter_lim_switch += 1
+            i += 1
 
         for key in key_inputs[::-1]:
             if key == arcade.key.D:
-                if not self.dir[0]:
+                if self.tail[1].x != correct_pos(self.head.x + self.vel, 0)[0]:
                     self.dir = (self.vel, 0)
                     break
             elif key == arcade.key.A:
-                if not self.dir[0]:
+                if self.tail[1].x != correct_pos(self.head.x - self.vel, 0)[0]:
                     self.dir = (-self.vel, 0)
                     break
             elif key == arcade.key.W:
-                if not self.dir[1]:
+                if self.tail[1].y != correct_pos(0, self.head.y + self.vel)[1]:
                     self.dir = (0, self.vel)
                     break
             elif key == arcade.key.S:
-                if not self.dir[1]:
+                if self.tail[1].y != correct_pos(0, self.head.y - self.vel)[1]:
                     self.dir = (0, -self.vel)
                     break
+        else:
+            if not self.boost and self.counter_lim_switch == 1 or self.boost and self.counter_lim_switch == 2:
+                self.counter *= self.counter_lim[self.counter_lim_switch - 1] / self.counter_lim[self.counter_lim_switch]
+        self.counter_lim_switch = i
+

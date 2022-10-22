@@ -17,7 +17,7 @@ class Game(arcade.Window):
 
     def setup(self):
         self.map = Map()
-        self.snake = Snake(self.map, 3)
+        self.snake = Snake(self.map, 10)
 
     def on_update(self, dt: float):
         if not self.snake.dead:
